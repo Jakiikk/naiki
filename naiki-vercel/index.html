@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Naiki AI</title>
+<meta name="description" content="Naiki AI: teman karier siswa SMA. AI companion, asesmen minat RIASEC, roadmap karier otomatis, dashboard Guru BK, mentoring, progress tracker, dan direktori karier.">
+<meta property="og:title" content="Naiki AI">
+<meta property="og:description" content="Teman karier siswa SMA: asesmen minat, roadmap karier, dan AI companion dalam satu alur.">
+<meta property="og:image" content="/logo.png">
+<meta name="theme-color" content="#5E2EC3">
+<link rel="icon" type="image/png" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: a sticky rail that lists the 7-step student journey in order, beside one working canvas; under 860px the rail folds into a top bar with scrollable step chips. */
+:root{
+  --bg:#F4F3FA; --surface:#FFFFFF; --sunk:#F0EEF8; --ink:#1A1530; --muted:#625C7B; --line:#E2DEEE;
+  --violet:#5E2EC3; --blue:#1C59B4; --soft:#EDE7FC; --soft-blue:#E3EDFC; --on-accent:#FFFFFF;
+  --good:#16794B; --good-soft:#E1F3E9; --warn:#9A5F0C; --warn-soft:#FBEFD9; --crit:#BC2B42; --crit-soft:#FBE5E8;
+  --scrim:rgba(20,15,36,.45); --shadow:0 1px 2px rgba(26,21,48,.05), 0 10px 28px -14px rgba(26,21,48,.22);
+  --brand-a:#6A35C8; --brand-b:#2950B8;
+  --call-bg:#0E0A19; --call-tile:#1C1630; --call-ink:#F3F0FB; --call-muted:#A59FC0; --call-end:#E0475E;
+  --f-display:"Bricolage Grotesque","Plus Jakarta Sans",system-ui,sans-serif;
+  --f-body:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --r-s:8px; --r-m:14px; --r-l:20px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#100D1A; --surface:#191527; --sunk:#14111F; --ink:#EEEAF8; --muted:#A49EBC; --line:#2C2640;
+  --violet:#A78DFF; --blue:#7AA8F5; --soft:#251D3F; --soft-blue:#172540; --on-accent:#140F24;
+  --good:#5FD39A; --good-soft:#132A1F; --warn:#F2B55B; --warn-soft:#2D2312; --crit:#FF7D8F; --crit-soft:#341822;
+  --scrim:rgba(0,0,0,.6); --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 30px -14px rgba(0,0,0,.7);
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#100D1A; --surface:#191527; --sunk:#14111F; --ink:#EEEAF8; --muted:#A49EBC; --line:#2C2640;
+  --violet:#A78DFF; --blue:#7AA8F5; --soft:#251D3F; --soft-blue:#172540; --on-accent:#140F24;
+  --good:#5FD39A; --good-soft:#132A1F; --warn:#F2B55B; --warn-soft:#2D2312; --crit:#FF7D8F; --crit-soft:#341822;
+  --scrim:rgba(0,0,0,.6); --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 30px -14px rgba(0,0,0,.7);
+  color-scheme:dark }
+
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--f-display);line-height:1.15;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(1.6rem,1.2rem + 1.4vw,2.2rem);font-weight:800}
+h2{font-size:1.15rem;font-weight:700}
+h3{font-size:1rem;font-weight:700}
+p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--violet);outline-offset:2px;border-radius:6px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.eyebrow{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* Shell */
+.shell{display:grid;grid-template-columns:264px minmax(0,1fr);min-height:100vh}
+.side{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;height:100vh;overflow-y:auto;
+  background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;gap:22px;
+  padding-block:22px;padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:16px}
+.brand{display:flex;align-items:center;gap:10px;padding-inline:6px}
+.brand img{width:38px;height:auto;display:block}
+.brand b{font-family:var(--f-display);font-size:1.3rem;font-weight:800;letter-spacing:-.02em;display:block;line-height:1}
+.brand small{color:var(--muted);font-size:.74rem}
+.nav{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;position:relative}
+.nav::before{content:"";position:absolute;left:20px;top:18px;bottom:18px;width:2px;background:var(--line)}
+.nav a{position:relative;display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:12px;text-decoration:none;color:var(--ink)}
+.nav a:hover{background:var(--sunk)}
+.nav .n{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:.72rem;font-weight:600;
+  background:var(--surface);border:2px solid var(--line);color:var(--muted)}
+.nav .t{display:flex;flex-direction:column;min-width:0}
+.nav .t span{font-weight:600;font-size:.9rem;line-height:1.25}
+.nav .t small{color:var(--muted);font-size:.74rem}
+.nav a[aria-current="page"]{background:var(--soft)}
+.nav a[aria-current="page"] .n{background:var(--violet);border-color:var(--violet);color:var(--on-accent)}
+.nav a[aria-current="page"] .t span{color:var(--violet)}
+.tag-guru{font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--blue);background:var(--soft-blue);border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:1px}
+.side-foot{margin-top:auto;border-top:1px solid var(--line);padding-top:16px;display:flex;flex-direction:column;gap:6px;font-size:.78rem;color:var(--muted)}
+.ai-status{display:inline-flex;align-items:center;gap:7px;font-weight:600;color:var(--ink)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.dot.on{background:var(--good)} .dot.wait{background:var(--warn)}
+
+.main{min-width:0;padding-block:28px 64px;padding-left:36px;padding-right:max(36px, env(safe-area-inset-right,0px))}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.top .lead{max-width:62ch;color:var(--muted);margin-top:6px}
+.who{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 14px 5px 5px}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:.8rem;background:var(--soft);color:var(--violet);flex:none}
+.av.grad{background:linear-gradient(135deg,var(--brand-a),var(--brand-b));color:#fff}
+.who b{display:block;font-size:.86rem;line-height:1.2}
+.who small{color:var(--muted);font-size:.74rem}
+
+/* Generic */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);padding:20px;min-width:0}
+.card.raised{box-shadow:var(--shadow)}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.grid{display:grid;gap:18px}
+.g-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g-side{grid-template-columns:minmax(0,1fr) 320px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;padding:9px 16px;font-weight:600;font-size:.9rem;border:1px solid transparent;background:none;white-space:nowrap}
+.btn-p{background:var(--violet);color:var(--on-accent)}
+.btn-p:hover{filter:brightness(1.08)}
+.btn-g{background:var(--surface);border-color:var(--line)}
+.btn-g:hover{background:var(--sunk)}
+.btn-s{padding:6px 12px;font-size:.82rem;border-radius:8px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.link{background:none;border:0;padding:0;color:var(--violet);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 10px;font-size:.76rem;font-weight:600;white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.crit{background:var(--crit-soft);color:var(--crit)}
+.pill.info{background:var(--soft-blue);color:var(--blue)}
+.pill.neutral{background:var(--sunk);color:var(--muted)}
+.code{display:inline-flex;gap:3px}
+.code i{font-style:normal;font-family:var(--f-mono);font-weight:600;font-size:.74rem;width:22px;height:22px;display:grid;place-items:center;border-radius:6px;background:var(--soft);color:var(--violet)}
+.note{font-size:.8rem;color:var(--muted)}
+.example-flag{display:inline-flex;align-items:center;gap:6px;font-size:.74rem;font-weight:600;color:var(--warn);background:var(--warn-soft);border-radius:6px;padding:2px 8px}
+.bar{height:8px;border-radius:99px;background:var(--sunk);overflow:hidden}
+.bar>span{display:block;height:100%;border-radius:99px;background:var(--violet)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 13px;font-size:.84rem;font-weight:500}
+.chip:hover{border-color:var(--violet)}
+.chip[aria-pressed="true"]{background:var(--violet);border-color:var(--violet);color:var(--on-accent)}
+
+/* 1. Companion */
+.chat{display:flex;flex-direction:column;padding:0;overflow:hidden}
+.chat-h{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.chat-h .av{width:40px;height:40px;background:var(--soft)}
+.chat-h .av img{width:26px}
+.msgs{height:clamp(340px,56vh,600px);overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px;background:var(--sunk)}
+.msg{max-width:min(78%,560px);padding:11px 15px;border-radius:16px;line-height:1.55;font-size:.92rem;overflow-wrap:anywhere}
+.msg.user{align-self:flex-end;background:var(--violet);color:var(--on-accent);border-bottom-right-radius:5px}
+.msg.ai{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:5px}
+.msg ul{margin:6px 0;padding-left:20px}
+.msg p+p,.msg p+ul,.msg ul+p{margin-top:8px}
+.msg .err{display:block;margin-top:6px;font-size:.78rem;color:var(--crit)}
+.typing{display:inline-flex;gap:4px;align-items:center;color:var(--muted);font-size:.85rem}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:blink 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.composer{border-top:1px solid var(--line);padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.composer form{display:flex;gap:10px;align-items:flex-end}
+.composer textarea{flex:1;min-width:0;resize:none;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg);min-height:46px;max-height:140px}
+.composer textarea:focus{outline:2px solid var(--violet);outline-offset:0;border-color:transparent}
+.ctx dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:10px 14px;font-size:.86rem}
+.ctx dt{color:var(--muted)} .ctx dd{margin:0;font-weight:600;text-align:right}
+
+/* 2. Assessment */
+.hexwrap{display:grid;grid-template-columns:260px minmax(0,1fr);gap:24px;align-items:center}
+.hex svg{width:100%;max-width:260px;height:auto;display:block;margin:0 auto}
+.big-code{font-family:var(--f-display);font-weight:800;font-size:3.2rem;line-height:1;letter-spacing:.02em;
+  background:linear-gradient(135deg,var(--brand-a),var(--brand-b));-webkit-background-clip:text;background-clip:text;color:transparent}
+.rows{display:flex;flex-direction:column;gap:9px}
+.row{display:grid;grid-template-columns:120px minmax(0,1fr) 42px;gap:12px;align-items:center;font-size:.86rem}
+.row b{font-weight:600}
+.reco{display:flex;flex-direction:column;gap:10px}
+.reco-item{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:12px}
+.reco-item .grow{flex:1;min-width:0}
+.pct{font-family:var(--f-mono);font-weight:600;font-size:.95rem;color:var(--violet)}
+.quiz{max-width:720px;margin:0 auto;width:100%}
+.quiz-q{font-family:var(--f-display);font-size:clamp(1.3rem,1.1rem + .8vw,1.7rem);font-weight:700;margin:18px 0 22px;text-wrap:balance}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;align-items:center;gap:14px;text-align:left;padding:13px 16px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font-weight:500}
+.opt:hover{border-color:var(--violet)}
+.opt .radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center}
+.opt[aria-checked="true"]{border-color:var(--violet);background:var(--soft)}
+.opt[aria-checked="true"] .radio{border-color:var(--violet)}
+.opt[aria-checked="true"] .radio::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--violet)}
+.quiz-nav{display:flex;justify-content:space-between;margin-top:22px;gap:10px}
+
+/* 3. Roadmap */
+.target{display:flex;flex-wrap:wrap;align-items:center;gap:18px;justify-content:space-between}
+.target .grow{flex:1;min-width:220px}
+.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.ph{display:grid;grid-template-columns:34px minmax(0,1fr);gap:16px;position:relative;padding-bottom:22px}
+.ph:not(:last-child)::before{content:"";position:absolute;left:16px;top:34px;bottom:0;width:2px;background:var(--line)}
+.ph.done:not(:last-child)::before{background:var(--violet)}
+.node{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--line);background:var(--surface);font-family:var(--f-mono);font-size:.8rem;font-weight:600;color:var(--muted);position:relative;z-index:1}
+.ph.done .node{background:var(--violet);border-color:var(--violet);color:var(--on-accent)}
+.ph.now .node{border-color:var(--violet);color:var(--violet);box-shadow:0 0 0 5px var(--soft)}
+.ph-body{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);padding:14px 16px}
+.ph.now .ph-body{border-color:var(--violet)}
+.ph-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.task{display:flex;gap:10px;align-items:flex-start;padding:6px 0;font-size:.9rem;cursor:pointer}
+.task input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--violet);flex:none}
+.task.is-done span{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line)}
+
+/* 4. Guru BK */
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);padding:16px 18px}
+.stat .v{font-family:var(--f-display);font-size:2rem;font-weight:800;line-height:1.1;margin:4px 0 2px;font-variant-numeric:tabular-nums}
+.stat.crit .v{color:var(--crit)}
+.alerts{display:flex;flex-direction:column;gap:10px}
+.alert{display:grid;grid-template-columns:4px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 14px 12px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.alert::before{content:"";align-self:stretch;background:var(--muted)}
+.alert.crit::before{background:var(--crit)}.alert.warn::before{background:var(--warn)}.alert.info::before{background:var(--blue)}
+.alert p{font-size:.88rem}
+.tbl-wrap{overflow-x:auto;margin:0 -20px -20px;padding:0 20px 8px}
+table{width:100%;border-collapse:collapse;font-size:.87rem;min-width:760px}
+th{text-align:left;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:10px 10px;border-bottom:1px solid var(--line)}
+td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td .bar{width:90px;display:inline-block;vertical-align:middle;margin-right:8px}
+select{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 10px;font-size:.85rem}
+
+/* 5. Mentoring */
+.next{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center;background:var(--soft);border:1px solid var(--line);border-radius:var(--r-l);padding:22px}
+.next .when{font-family:var(--f-display);font-size:1.35rem;font-weight:700;margin:4px 0}
+.mentors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.mentor{display:flex;flex-direction:column;gap:10px}
+.mentor-h{display:flex;gap:12px;align-items:center}
+.mentor-h .av{width:44px;height:44px}
+.slots{display:flex;flex-wrap:wrap;gap:6px}
+.slot{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 10px;font-size:.8rem;font-family:var(--f-mono)}
+.slot[aria-pressed="true"]{background:var(--violet);border-color:var(--violet);color:var(--on-accent)}
+.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.list li{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);font-size:.88rem}
+.list li:last-child{border-bottom:0}
+textarea.notes{width:100%;min-height:150px;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--bg);resize:vertical;line-height:1.6}
+
+/* 6. Progress */
+.lvl{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.ring{position:relative;width:132px;height:132px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .in{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.ring .in b{font-family:var(--f-display);font-size:2.2rem;font-weight:800;line-height:1;display:block}
+.minis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;flex:1;min-width:220px}
+.mini{background:var(--sunk);border-radius:12px;padding:10px 12px}
+.mini b{font-family:var(--f-display);font-size:1.3rem;display:block;font-variant-numeric:tabular-nums}
+.mini small{color:var(--muted);font-size:.78rem}
+.badges{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.badge{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:14px 8px;border:1px solid var(--line);border-radius:12px}
+.badge .ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--brand-a),var(--brand-b));color:#fff}
+.badge.locked .ic{background:var(--sunk);color:var(--muted)}
+.badge b{font-size:.84rem;line-height:1.25}
+.badge small{font-size:.74rem;color:var(--muted)}
+.chart svg{width:100%;height:auto;display:block}
+
+/* 7. Directory */
+.toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.search{flex:1;min-width:220px;position:relative}
+.search input{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px 10px 38px;background:var(--surface)}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.ccard{display:flex;flex-direction:column;gap:10px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);padding:16px}
+.ccard:hover{border-color:var(--violet)}
+.ccard .h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.ccard .meta{font-size:.82rem;color:var(--muted)}
+.ccard .foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:auto;padding-top:10px;border-top:1px dashed var(--line);font-size:.82rem}
+.is-target{outline:2px solid var(--violet);outline-offset:-1px}
+.drawer-bg{position:fixed;inset:0;background:var(--scrim);z-index:40}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:var(--surface);z-index:41;overflow-y:auto;box-shadow:var(--shadow);
+  padding-top:max(22px, env(safe-area-inset-top,0px));padding-bottom:max(22px, env(safe-area-inset-bottom,0px));padding-left:24px;padding-right:max(24px, env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:18px}
+.drawer dl{margin:0;display:flex;flex-direction:column;gap:12px}
+.drawer dt{font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.drawer dd{margin:2px 0 0}
+
+/* Call */
+.call{position:fixed;inset:0;z-index:50;background:var(--call-bg);color:var(--call-ink);display:flex;flex-direction:column;
+  padding-top:max(18px, env(safe-area-inset-top,0px));padding-bottom:max(18px, env(safe-area-inset-bottom,0px));padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));gap:14px}
+.call-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.call-h small{color:var(--call-muted)}
+.tiles{flex:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-height:0}
+.tile{background:var(--call-tile);border-radius:18px;display:grid;place-items:center;position:relative;min-height:160px}
+.tile .av{width:84px;height:84px;font-size:1.6rem}
+.tile span{position:absolute;left:12px;bottom:10px;font-size:.82rem;color:var(--call-muted)}
+.call-ctl{display:flex;justify-content:center;gap:12px}
+.cbtn{width:52px;height:52px;border-radius:50%;border:0;background:var(--call-tile);color:var(--call-ink);display:grid;place-items:center}
+.cbtn[aria-pressed="true"]{background:var(--call-ink);color:var(--call-bg)}
+.cbtn.end{background:var(--call-end);color:#fff;width:64px}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:60;background:var(--ink);color:var(--bg);
+  padding:11px 18px;border-radius:12px;font-size:.88rem;font-weight:500;box-shadow:var(--shadow);max-width:calc(100% - 32px)}
+
+@media (max-width:1060px){
+  .g-side{grid-template-columns:minmax(0,1fr)}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:860px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .side{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);gap:12px;padding-block:14px 10px;padding-right:max(16px, env(safe-area-inset-right,0px))}
+  .nav{flex-direction:row;overflow-x:auto;gap:6px;padding-bottom:4px;scrollbar-width:none}
+  .nav::before{display:none}
+  .nav a{flex:none;padding:7px 12px 7px 7px;border:1px solid var(--line);border-radius:999px}
+  .nav .t small,.side-foot{display:none}
+  .nav .t span{white-space:nowrap}
+  .main{padding-block:20px 56px;padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px))}
+  .g-2,.mentors,.hexwrap{grid-template-columns:minmax(0,1fr)}
+  .next{grid-template-columns:minmax(0,1fr)}
+  .badges{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tiles{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:480px){
+  .stats{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+  .stat .v{font-size:1.6rem}
+  .row{grid-template-columns:96px minmax(0,1fr) 38px}
+  .msg{max-width:88%}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <aside class="side">
+    <div class="brand">
+      <img src="/logo.png" alt="Logo Naiki AI">
+      <div><b>Naiki AI</b><small>Teman karier siswa SMA</small></div>
+    </div>
+    <nav aria-label="Fitur Naiki"><ol class="nav" id="nav"></ol></nav>
+    <div class="side-foot">
+      <span class="ai-status"><span class="dot wait" id="aiDot"></span><span id="aiLabel">Menghubungkan Naiki…</span></span>
+      <span>Prototype. Data siswa, sekolah, dan mentor adalah contoh.</span>
+    </div>
+  </aside>
+  <main class="main"><div class="wrap" id="view"></div></main>
+</div>
+<div id="layer"></div>
+<div id="toastHost" aria-live="polite"></div>
+
+<script>
+const LOGO = document.querySelector(".brand img").getAttribute("src");
+const VIEWS = [
+  {id:"companion", label:"AI Career Companion", cap:"Ngobrol dengan Naiki"},
+  {id:"asesmen", label:"Asesmen Potensi Diri", cap:"Kenali minat RIASEC"},
+  {id:"roadmap", label:"Career Roadmap Otomatis", cap:"Langkah sampai karier"},
+  {id:"guru", label:"Dashboard Guru BK", cap:"Untuk Guru BK", guru:true},
+  {id:"mentoring", label:"Mentoring Terintegrasi", cap:"Sesi dengan alumni"},
+  {id:"progress", label:"Progress Tracker", cap:"Level dan pencapaian"},
+  {id:"direktori", label:"Smart Career Directory", cap:"Jelajahi 16 profesi"}
+];
+const LEADS = {
+  companion:"Tanya apa saja soal jurusan, jalur masuk PTN, atau langkah karier. Naiki menjawab sesuai hasil asesmen dan targetmu.",
+  asesmen:"12 pernyataan singkat berbasis model minat Holland (RIASEC). Hasilnya dipakai untuk rekomendasi karier dan roadmap.",
+  roadmap:"Rencana bertahap dari kelas XI sampai karier awal, disusun otomatis dari profesi yang kamu targetkan.",
+  guru:"Ringkasan siswa binaan: siapa yang sudah asesmen, siapa yang perlu didampingi, dan sebaran minat per angkatan.",
+  mentoring:"Jadwalkan sesi dengan alumni dan profesional, lalu simpan catatan setiap sesi di satu tempat.",
+  progress:"Setiap asesmen, tugas roadmap, dan sesi mentoring menambah XP. Pantau level dan lencanamu di sini.",
+  direktori:"Profesi diurutkan menurut kecocokan dengan kode minatmu. Buka detail untuk melihat jurusan dan PTN terkait."
+};
+
+const RIASEC = {
+  R:{en:"Realistic", id:"Praktis", d:"senang bekerja dengan alat, mesin, dan hal yang nyata"},
+  I:{en:"Investigative", id:"Peneliti", d:"senang mengamati, menganalisis, dan memecahkan masalah"},
+  A:{en:"Artistic", id:"Kreatif", d:"senang berekspresi dan menciptakan hal baru"},
+  S:{en:"Social", id:"Sosial", d:"senang membantu, mengajar, dan mendampingi orang lain"},
+  E:{en:"Enterprising", id:"Pemimpin", d:"senang memimpin, meyakinkan, dan mengambil keputusan"},
+  C:{en:"Conventional", id:"Teratur", d:"senang bekerja rapi dengan data, aturan, dan prosedur"}
+};
+const KEYS = "RIASEC".split("");
+const QUESTIONS = [
+  ["R","Saya senang merakit, memperbaiki, atau mengoperasikan alat."],
+  ["R","Saya lebih suka praktik langsung daripada mendengarkan penjelasan di kelas."],
+  ["I","Saya suka mencari tahu mengapa sesuatu bisa terjadi."],
+  ["I","Soal matematika atau sains yang sulit membuat saya penasaran."],
+  ["A","Saya senang menggambar, menulis cerita, atau membuat musik."],
+  ["A","Saya suka mencari cara baru yang berbeda dari biasanya."],
+  ["S","Teman sering datang ke saya untuk curhat atau minta bantuan."],
+  ["S","Saya senang menjelaskan pelajaran kepada teman."],
+  ["E","Saya nyaman memimpin kelompok atau organisasi."],
+  ["E","Saya suka meyakinkan orang lain tentang ide saya."],
+  ["C","Saya suka membuat jadwal dan mencatat dengan rapi."],
+  ["C","Saya teliti saat bekerja dengan angka dan data."]
+];
+const SCALE = ["Sangat tidak sesuai","Tidak sesuai","Netral","Sesuai","Sangat sesuai"];
+const FIELDS = ["Semua","Teknologi","Kreatif","Kesehatan","Bisnis","Sosial & Pendidikan","Teknik"];
+
+const CAREERS = [
+  {id:"uiux",name:"UI/UX Designer",code:"AI",field:"Teknologi",majors:["Desain Komunikasi Visual","Sistem Informasi"],ptn:["ITB","Universitas Brawijaya","Universitas Indonesia"],salary:"6–12",outlook:"Tinggi",desc:"Merancang tampilan dan alur aplikasi agar mudah dan nyaman dipakai.",skill:"Figma dan prinsip desain antarmuka",proyek:"redesain aplikasi absensi sekolah",magang:"startup atau perusahaan teknologi",cert:"UX design tingkat dasar",entry:"Junior UI/UX Designer"},
+  {id:"data",name:"Data Scientist",code:"IC",field:"Teknologi",majors:["Statistika","Ilmu Komputer","Matematika"],ptn:["ITS","UGM","IPB University"],salary:"8–15",outlook:"Tinggi",desc:"Mengolah data menjadi temuan yang membantu keputusan bisnis dan kebijakan.",skill:"Python dan statistik dasar",proyek:"analisis data survei kebiasaan belajar di kelas",magang:"tim data perusahaan atau instansi pemerintah",cert:"analisis data",entry:"Data Analyst"},
+  {id:"se",name:"Software Engineer",code:"IR",field:"Teknologi",majors:["Teknik Informatika","Ilmu Komputer"],ptn:["ITB","Universitas Indonesia","Universitas Brawijaya"],salary:"8–18",outlook:"Tinggi",desc:"Membangun aplikasi dan sistem yang dipakai banyak orang setiap hari.",skill:"logika pemrograman dengan Python atau JavaScript",proyek:"website sederhana untuk ekskul",magang:"perusahaan teknologi",cert:"cloud atau pemrograman tingkat dasar",entry:"Junior Software Engineer"},
+  {id:"arsitek",name:"Arsitek",code:"AR",field:"Teknik",majors:["Arsitektur"],ptn:["ITB","UGM","ITS"],salary:"5–10",outlook:"Stabil",desc:"Merancang bangunan yang fungsional, aman, dan indah.",skill:"menggambar perspektif dan pemodelan 3D",proyek:"maket rumah tinggal sederhana",magang:"konsultan arsitektur",cert:"Surat Tanda Registrasi Arsitek",entry:"Asisten Arsitek"},
+  {id:"konten",name:"Content Strategist",code:"EA",field:"Kreatif",majors:["Ilmu Komunikasi","Manajemen Pemasaran"],ptn:["Universitas Padjadjaran","UGM","Universitas Airlangga"],salary:"5–10",outlook:"Tinggi",desc:"Merencanakan konten digital yang menarik dan sesuai tujuan sebuah brand.",skill:"copywriting dan membaca analitik media sosial",proyek:"kelola akun media sosial OSIS selama satu semester",magang:"agensi digital",cert:"pemasaran digital",entry:"Content Writer"},
+  {id:"dokter",name:"Dokter Umum",code:"IS",field:"Kesehatan",majors:["Pendidikan Dokter"],ptn:["Universitas Indonesia","UGM","Universitas Airlangga"],salary:"8–15",outlook:"Stabil",desc:"Mendiagnosis dan merawat pasien sebagai garda depan layanan kesehatan.",skill:"biologi dan kimia tingkat lanjut",proyek:"karya ilmiah remaja bertema kesehatan",magang:"kepaniteraan klinik (koas)",cert:"uji kompetensi dokter",entry:"Dokter internsip"},
+  {id:"gizi",name:"Ahli Gizi",code:"SI",field:"Kesehatan",majors:["Ilmu Gizi"],ptn:["IPB University","Universitas Brawijaya","Universitas Diponegoro"],salary:"4–8",outlook:"Stabil",desc:"Menyusun pola makan sehat untuk individu, rumah sakit, dan komunitas.",skill:"biologi dan dasar kimia pangan",proyek:"kampanye sarapan sehat di sekolah",magang:"rumah sakit atau puskesmas",cert:"registrasi tenaga gizi",entry:"Nutrisionis"},
+  {id:"psikolog",name:"Psikolog Klinis",code:"SI",field:"Sosial & Pendidikan",majors:["Psikologi (S1 + Profesi)"],ptn:["Universitas Indonesia","UGM","Universitas Airlangga"],salary:"6–12",outlook:"Tinggi",desc:"Membantu orang memahami dan mengatasi masalah psikologis.",skill:"mendengarkan aktif dan menulis laporan",proyek:"jadi relawan konselor sebaya",magang:"biro atau klinik psikologi",cert:"Surat Izin Praktik Psikologi",entry:"Asisten Psikolog"},
+  {id:"guru",name:"Guru",code:"SA",field:"Sosial & Pendidikan",majors:["Pendidikan Matematika","Pendidikan Bahasa Indonesia"],ptn:["UPI","UNY","Universitas Negeri Malang"],salary:"3–7",outlook:"Stabil",desc:"Mendidik dan mendampingi siswa agar tumbuh sesuai potensinya.",skill:"public speaking dan menjelaskan konsep",proyek:"jadi tutor sebaya untuk adik kelas",magang:"Program Pengenalan Lapangan Persekolahan",cert:"Pendidikan Profesi Guru",entry:"Guru mata pelajaran"},
+  {id:"akuntan",name:"Akuntan",code:"CE",field:"Bisnis",majors:["Akuntansi"],ptn:["Universitas Indonesia","UGM","Universitas Brawijaya"],salary:"5–10",outlook:"Stabil",desc:"Mencatat, memeriksa, dan melaporkan keuangan organisasi.",skill:"spreadsheet dan dasar pembukuan",proyek:"laporan keuangan kas kelas atau koperasi sekolah",magang:"kantor akuntan publik",cert:"Chartered Accountant",entry:"Staf Akuntansi"},
+  {id:"analis",name:"Analis Keuangan",code:"CI",field:"Bisnis",majors:["Manajemen Keuangan","Ilmu Ekonomi"],ptn:["Universitas Indonesia","UGM","Universitas Padjadjaran"],salary:"7–14",outlook:"Tinggi",desc:"Menilai kinerja keuangan dan peluang investasi perusahaan.",skill:"spreadsheet dan membaca laporan keuangan",proyek:"simulasi anggaran usaha kecil",magang:"bank atau perusahaan sekuritas",cert:"analis keuangan",entry:"Junior Financial Analyst"},
+  {id:"sipil",name:"Insinyur Sipil",code:"RI",field:"Teknik",majors:["Teknik Sipil"],ptn:["ITB","ITS","UGM"],salary:"6–12",outlook:"Stabil",desc:"Merancang dan mengawasi pembangunan jalan, jembatan, dan gedung.",skill:"fisika mekanika dan menggambar teknik",proyek:"model jembatan stik es krim untuk lomba",magang:"kontraktor atau konsultan konstruksi",cert:"Sertifikat Kompetensi Kerja konstruksi",entry:"Site Engineer"},
+  {id:"lingkungan",name:"Ahli Lingkungan",code:"RI",field:"Teknik",majors:["Teknik Lingkungan"],ptn:["ITB","ITS","Universitas Diponegoro"],salary:"5–10",outlook:"Tinggi",desc:"Mengelola air, limbah, dan udara agar lingkungan tetap sehat.",skill:"kimia dan biologi lingkungan",proyek:"program bank sampah sekolah",magang:"dinas lingkungan hidup atau industri",cert:"AMDAL",entry:"Environmental Officer"},
+  {id:"founder",name:"Wirausaha Digital",code:"ER",field:"Bisnis",majors:["Kewirausahaan","Manajemen"],ptn:["UGM","Universitas Ciputra","Universitas Prasetiya Mulya"],salary:"bervariasi",outlook:"Tinggi",desc:"Membangun usaha sendiri dan menciptakan lapangan kerja.",skill:"menjual, negosiasi, dan dasar keuangan",proyek:"usaha kecil di bazar atau marketplace",magang:"startup tahap awal",cert:"inkubasi bisnis",entry:"Founder usaha rintisan"},
+  {id:"hi",name:"Diplomat",code:"ES",field:"Sosial & Pendidikan",majors:["Hubungan Internasional"],ptn:["Universitas Indonesia","UGM","Universitas Padjadjaran"],salary:"6–12",outlook:"Stabil",desc:"Mewakili Indonesia dalam hubungan dengan negara lain.",skill:"bahasa asing dan debat",proyek:"ikut Model United Nations",magang:"Kementerian Luar Negeri atau lembaga internasional",cert:"TOEFL atau IELTS",entry:"Staf diplomatik"},
+  {id:"perawat",name:"Perawat",code:"SR",field:"Kesehatan",majors:["Ilmu Keperawatan"],ptn:["Universitas Indonesia","Universitas Airlangga","Universitas Brawijaya"],salary:"4–8",outlook:"Tinggi",desc:"Merawat pasien dan mendampingi pemulihan mereka setiap hari.",skill:"biologi dan pertolongan pertama",proyek:"aktif di PMR sekolah",magang:"praktik klinik di rumah sakit",cert:"Surat Tanda Registrasi Ners",entry:"Perawat pelaksana"}
+];
+const MENTORS = [
+  {id:"dimas",name:"Kak Dimas Arya",init:"DA",role:"UI/UX Designer di startup edtech",alum:"Alumni 2019",tags:["Portofolio","Figma","Magang"],slots:["Sen 19 Okt · 16.00","Rab 21 Okt · 19.00","Sab 24 Okt · 10.00"]},
+  {id:"sekar",name:"Kak Sekar Ayuningtyas",init:"SA",role:"Data Analyst di bank nasional",alum:"Alumni 2017",tags:["Statistika","SNBT","Python"],slots:["Sel 20 Okt · 19.30","Jum 23 Okt · 16.00"]},
+  {id:"reza",name:"dr. Reza Mahendra",init:"RM",role:"Dokter umum di puskesmas",alum:"Alumni 2014",tags:["Kedokteran","Koas","Beasiswa"],slots:["Sab 24 Okt · 09.00","Min 25 Okt · 13.00"]},
+  {id:"nabila",name:"Kak Nabila Huda",init:"NH",role:"Psikolog klinis",alum:"Alumni 2015",tags:["Psikologi","Profesi","Konseling"],slots:["Kam 22 Okt · 19.00","Sab 24 Okt · 15.00"]}
+];
+const STUDENTS = [
+  {n:"Nadia Putri",k:"XI MIPA 2",code:"IA",t:"UI/UX Designer",p:null,s:["good","Sesuai jalur"]},
+  {n:"Aditya Pratama",k:"XII IPS 1",code:"EC",t:"Belum memilih",p:5,s:["crit","Perlu sesi BK"]},
+  {n:"Salsabila Rahma",k:"XI MIPA 3",code:"–",t:"Belum memilih",p:12,s:["warn","Minat menyebar"]},
+  {n:"Bima Saputra",k:"XII MIPA 1",code:"RI",t:"Insinyur Sipil",p:61,s:["good","Sesuai jalur"]},
+  {n:"Citra Ayu Lestari",k:"XII IPS 2",code:"SI",t:"Psikolog Klinis",p:48,s:["good","Sesuai jalur"]},
+  {n:"Fajar Nugroho",k:"XI IPS 1",code:"ER",t:"Wirausaha Digital",p:22,s:["warn","Perlu dipantau"]},
+  {n:"Intan Permata",k:"XII MIPA 2",code:"IS",t:"Dokter Umum",p:72,s:["good","Sesuai jalur"]},
+  {n:"Rizky Hidayat",k:"XI MIPA 1",code:"–",t:"–",p:0,s:["neutral","Belum asesmen"]}
+];
+const SPREAD = {R:14,I:31,A:19,S:24,E:17,C:13};
+const WEEK = [["Sen",25],["Sel",40],["Rab",15],["Kam",0],["Jum",35],["Sab",50],["Min",20]];
+
+/* ---------- state ---------- */
+const KEY = "naiki-ai-v1";
+function defaults(){
+  return {v:1, answers:[2,3,5,4,5,3,3,4,2,3,3,4], assessed:true, isExample:true, target:"uiux",
+    checks:{"uiux|0|0|0":1,"uiux|0|0|1":1,"uiux|0|1|0":1}, roadmaps:{},
+    sessions:[{mentor:"dimas",slot:"Kam 22 Okt · 16.00",topic:"Review portofolio pertama",status:"Terjadwal"}],
+    doneSessions:2, viewed:["uiux","data","se"], streak:6,
+    chat:[
+      {role:"user",content:"Aku suka gambar tapi juga suka matematika. Jurusan apa yang nyambung sama dua-duanya?"},
+      {role:"assistant",content:"Kombinasi itu pas dengan kode minatmu **IA** (Peneliti + Kreatif). Beberapa jurusan yang menggabungkan keduanya:\n- **Desain Komunikasi Visual**, kalau kamu ingin fokus ke visual\n- **Sistem Informasi** atau **Informatika**, untuk jalur UI/UX dan produk digital\n- **Arsitektur**, kalau kamu suka ruang dan bangunan\n\nMau aku bandingkan peluang masuk dan prospek kerjanya?"}
+    ], chatIsExample:true,
+    notes:"- Mulai dari 1 studi kasus: redesain aplikasi absensi sekolah\n- Pelajari auto layout di Figma\n- Bandingkan prodi DKV dan Sistem Informasi di 3 PTN incaran"};
+}
+function load(){ try{ const s = JSON.parse(localStorage.getItem(KEY)||"null"); if(s && s.v===1) return Object.assign(defaults(), s); }catch(e){} return defaults(); }
+let S = load();
+S.chat = S.chat.filter(m=>!m.pending);
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+const UI = {view:"companion", taking:false, q:0, tmp:[], search:"", field:"Semua", sort:"cocok", detail:null, kelas:"Semua", pick:{}, busy:false, ctl:null, rmBusy:false, draft:""};
+
+const API = "/api/naiki";
+let aiState = "wait";
+function setAI(st){ aiState = st; const d=document.getElementById("aiDot"), l=document.getElementById("aiLabel");
+  d.className = "dot " + (st==="on"?"on":st==="wait"?"wait":"");
+  l.textContent = ({on:"Naiki aktif", wait:"Menghubungkan Naiki…", nokey:"API key belum diatur", off:"Naiki offline"})[st];
+  const c = document.getElementById("chatStatus"); if(c) c.innerHTML = statusHTML(); }
+fetch(API).then(r=>r.ok?r.json():Promise.reject()).then(d=>setAI(d.ready?"on":"nokey")).catch(()=>setAI("off"));
+async function callNaiki(payload, signal){
+  let r;
+  try{ r = await fetch(API, {method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify(payload), signal}); }
+  catch(e){ throw {code: e && e.name==="AbortError" ? "cancelled" : "offline"}; }
+  const d = await r.json().catch(()=>({}));
+  if(!r.ok) throw {code:(d.error && d.error.code) || "upstream"};
+  return d;
+}
+function ctxPayload(){ const sc = scores(S.answers), c = career(S.target);
+  return {name:"Nadia", kelas:"XI MIPA 2", code:topCode(sc), scores:sc, target:c.name, majors:c.majors.join(", "), progress:rmStats(c).pct}; }
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function md(s){
+  const lines = esc(s).split("\n"); let out = "", inList = false;
+  const inl = t => t.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>");
+  for(const raw of lines){ const l = raw.trim();
+    if(/^[-•*]\s+/.test(l)){ if(!inList){ out += "<ul>"; inList = true; } out += "<li>"+inl(l.replace(/^[-•*]\s+/,""))+"</li>"; }
+    else { if(inList){ out += "</ul>"; inList = false; } if(l) out += "<p>"+inl(l)+"</p>"; } }
+  if(inList) out += "</ul>"; return out;
+}
+function scores(a){ const o={}; KEYS.forEach((k,i)=>{ o[k] = Math.round((a[i*2]+a[i*2+1]-2)/8*100); }); return o; }
+function topCode(sc){ return KEYS.slice().sort((a,b)=>sc[b]-sc[a] || KEYS.indexOf(a)-KEYS.indexOf(b)).slice(0,2).join(""); }
+function match(c, sc){ return Math.round(.6*sc[c.code[0]] + .4*sc[c.code[1]]); }
+function career(id){ return CAREERS.find(c=>c.id===id) || CAREERS[0]; }
+function codeHTML(code){ return `<span class="code" aria-label="Kode ${code}">${code.split("").map(l=>`<i title="${RIASEC[l]?RIASEC[l].id:""}">${l}</i>`).join("")}</span>`; }
+function toast(t){ const h = $("#toastHost"); h.innerHTML = `<div class="toast">${esc(t)}</div>`; clearTimeout(toast._t); toast._t = setTimeout(()=>{ h.innerHTML=""; }, 3200); }
+function errCopy(code){
+  return ({rate_limited:"Naiki sedang sibuk atau kuota AI habis. Coba lagi beberapa menit lagi.",
+    refused:"Naiki tidak bisa menjawab pertanyaan itu. Coba ubah pertanyaannya.",
+    invalid_json:"Naiki gagal menyusun format roadmap. Coba sekali lagi.",
+    no_key:"Naiki belum siap: API key belum diatur di server.",
+    offline:"Tidak bisa terhubung ke server Naiki. Periksa koneksi internet.",
+    bad_request:"Pesan tidak bisa diproses. Coba persingkat pertanyaannya.",
+    empty:"Naiki tidak memberi jawaban. Coba dengan kalimat lain.",
+    forbidden:"Server menolak permintaan dari alamat ini."})[code] || "Koneksi ke Naiki terputus. Coba kirim lagi.";
+}
+function rm(c){ const r = S.roadmaps[c.id]; return {rev: r ? r.rev : 0, ai: !!(r && r.ai), phases: r ? r.phases : template(c)}; }
+function template(c){ return [
+  {title:"Kelas XI", period:"Semester 3–4 · sekarang", tasks:[`Jaga nilai rapor stabil, terutama mapel pendukung ${c.majors[0]}`, `Pelajari dasar ${c.skill}`, `Ikut satu ekskul atau lomba di bidang ${c.field.toLowerCase()}`]},
+  {title:"Kelas XII", period:"Semester 5–6", tasks:[`Selesaikan proyek kecil: ${c.proyek}`, `Pilih 3 prodi ${c.majors.join(" atau ")} di PTN incaran`, "Konsultasikan pilihan prodi dengan Guru BK"]},
+  {title:"Seleksi masuk PTN", period:"Februari–Juli kelas XII", tasks:["Cek eligibilitas dan daftar SNBP", "Latihan soal TPS dan literasi untuk SNBT", "Siapkan jalur mandiri sebagai cadangan"]},
+  {title:"Kuliah S1", period:"Sekitar 4 tahun", tasks:[`Magang di ${c.magang}`, `Ambil sertifikasi ${c.cert}`, "Bangun jaringan lewat organisasi dan alumni"]},
+  {title:"Karier awal", period:"Setelah lulus", tasks:[`Lamar posisi ${c.entry}`, "Susun CV dan portofolio dari pengalaman kuliah"]}
+];}
+function tkey(c, rev, p, t){ return `${c.id}|${rev}|${p}|${t}`; }
+function rmStats(c){ const r = rm(c); let total=0, done=0;
+  r.phases.forEach((ph,p)=>ph.tasks.forEach((_,t)=>{ total++; if(S.checks[tkey(c,r.rev,p,t)]) done++; }));
+  return {total, done, pct: total ? Math.round(done/total*100) : 0}; }
+function xpInfo(){
+  const st = rmStats(career(S.target)), chats = S.chatIsExample ? 0 : S.chat.filter(m=>m.role==="user").length;
+  const xp = (S.assessed && !S.isExample?150:0) + st.done*40 + S.doneSessions*60 + S.viewed.length*10 + chats*5 + S.streak*5;
+  return {xp, level: Math.floor(xp/300)+1, into: xp%300, st};
+}
+function go(v){ if(!VIEWS.some(x=>x.id===v)) v="companion"; UI.view = v; UI.detail = null;
+  try{ history.replaceState(null,"","#"+v); }catch(e){} render(); window.scrollTo(0,0); }
+
+/* ---------- views ---------- */
+function header(v){
+  const i = VIEWS.findIndex(x=>x.id===v.id)+1;
+  const who = v.guru ? `<div class="who"><span class="av">RD</span><div><b>Ibu Ratna Dewi, S.Pd.</b><small>Guru BK · SMA contoh</small></div></div>`
+                     : `<div class="who"><span class="av">NP</span><div><b>Nadia Putri</b><small>XI MIPA 2 · contoh siswa</small></div></div>`;
+  return `<header class="top"><div><p class="eyebrow">Fitur ${i} dari 7${v.guru?" · untuk Guru BK":""}</p><h1>${v.label}</h1><p class="lead">${LEADS[v.id]}</p></div>${who}</header>`;
+}
+function statusHTML(){
+  return aiState==="on" ? `<span class="pill good"><span class="dot on"></span>Aktif</span>`
+       : aiState==="wait" ? `<span class="pill warn">Menghubungkan…</span>`
+       : aiState==="nokey" ? `<span class="pill crit">API key belum diatur</span>` : `<span class="pill neutral">Offline</span>`;
+}
+
+function vCompanion(){
+  const sc = scores(S.answers), c = career(S.target), st = rmStats(c);
+  const sug = ["Bedanya SNBP dan SNBT itu apa?", `Prodi apa yang paling cocok untuk jadi ${c.name}?`, "Gimana cara mulai bikin portofolio?", "Aku takut salah pilih jurusan. Harus mulai dari mana?"];
+  return `<div class="grid g-side">
+    <section class="card chat raised" aria-label="Percakapan dengan Naiki">
+      <div class="chat-h"><span class="av"><img src="${LOGO}" alt=""></span><div style="flex:1;min-width:0"><h2>Naiki</h2><small class="muted">AI Career Companion</small></div><span id="chatStatus">${statusHTML()}</span></div>
+      <div class="msgs" id="msgs"></div>
+      <div class="composer">
+        <div class="chips" aria-label="Contoh pertanyaan">${sug.map(s=>`<button class="chip" data-act="suggest" data-q="${esc(s)}">${esc(s)}</button>`).join("")}</div>
+        <form id="chatForm"><label for="chatInput" class="sr">Pesan untuk Naiki</label>
+          <textarea id="chatInput" rows="1" placeholder="Tulis pertanyaanmu untuk Naiki…">${esc(UI.draft)}</textarea>
+          <button class="btn btn-p" id="sendBtn" type="submit">Kirim</button></form>
+      </div>
+    </section>
+    <aside class="grid" style="align-content:start">
+      <section class="card ctx"><div class="card-h"><h2>Yang Naiki ketahui</h2></div>
+        <dl><dt>Kode minat</dt><dd>${codeHTML(topCode(sc))}</dd><dt>Target karier</dt><dd>${esc(c.name)}</dd>
+        <dt>Progres roadmap</dt><dd class="num">${st.pct}%</dd><dt>Kelas</dt><dd>XI MIPA 2</dd></dl>
+        <p class="note" style="margin-top:14px">Naiki memakai konteks ini agar saran jurusan dan langkahnya relevan denganmu.</p></section>
+      <section class="card"><h3>Butuh bicara dengan orang?</h3><p class="note" style="margin-top:6px">Untuk hal pribadi atau keputusan besar, Naiki akan mengarahkanmu ke Guru BK atau mentor.</p>
+        <div style="margin-top:12px"><button class="btn btn-g btn-s" data-go="mentoring">Lihat jadwal mentoring</button></div></section>
+      <button class="link" data-act="clearChat" style="justify-self:start">Mulai percakapan baru</button>
+    </aside></div>`;
+}
+function msgsHTML(){
+  let h = S.chatIsExample ? `<p class="example-flag" style="align-self:center">Contoh percakapan</p>` : "";
+  if(!S.chat.length) h += `<p class="note" style="align-self:center;text-align:center;max-width:36ch;margin:auto">Mulai dengan pertanyaan apa saja. Contohnya ada di bawah.</p>`;
+  S.chat.forEach((m,i)=>{ h += bubble(m,i); }); return h;
+}
+function bubble(m,i){
+  if(m.role==="user") return `<div class="msg user" data-i="${i}">${md(m.content)}</div>`;
+  const body = m.pending ? `<span class="typing"><i></i><i></i><i></i>&nbsp;Naiki sedang berpikir</span>` : md(m.content);
+  return `<div class="msg ai" data-i="${i}">${body}${m.note?`<span class="err">${esc(m.note)}</span>`:""}</div>`;
+}
+function paintMsgs(){ const box = $("#msgs"); if(!box) return; box.innerHTML = msgsHTML(); box.scrollTop = box.scrollHeight; }
+function paintLast(){ const box = $("#msgs"); if(!box) return; const i = S.chat.length-1, el = box.querySelector(`[data-i="${i}"]`);
+  if(el){ el.outerHTML = bubble(S.chat[i], i); box.scrollTop = box.scrollHeight; } }
+function paintComposer(){ const b = $("#sendBtn"); if(!b) return; b.textContent = UI.busy ? "Berhenti" : "Kirim"; b.type = UI.busy ? "button" : "submit"; b.dataset.act = UI.busy ? "stop" : ""; }
+async function sendChat(text){
+  text = (text||"").trim(); if(!text || UI.busy) return;
+  if(S.chatIsExample){ S.chat = []; S.chatIsExample = false; }
+  S.chat.push({role:"user",content:text}); const msg = {role:"assistant",content:"",pending:true}; S.chat.push(msg);
+  UI.draft = ""; const inp = $("#chatInput"); if(inp){ inp.value = ""; inp.style.height = "auto"; } save(); paintMsgs();
+  UI.busy = true; UI.ctl = new AbortController(); paintComposer();
+  const hist = S.chat.slice(0,-1).filter(m=>m.content && m.content.trim()).slice(-12).map(m=>({role:m.role, content:m.content}));
+  try{
+    const d = await callNaiki({task:"chat", context:ctxPayload(), messages:hist}, UI.ctl.signal);
+    msg.content = d.text || "";
+    if(d.truncated) msg.note = "Jawaban terpotong. Minta Naiki melanjutkan.";
+    if(aiState!=="on") setAI("on");
+  }catch(e){
+    const code = e && e.code;
+    if(code!=="cancelled") msg.note = errCopy(code);
+    if(code==="no_key") setAI("nokey"); else if(code==="offline") setAI("off");
+  }finally{
+    msg.pending = false; if(!msg.content && !msg.note) S.chat.pop();
+    UI.busy = false; UI.ctl = null; save(); paintMsgs(); paintComposer();
+  }
+}
+
+function hexSVG(sc){
+  const R = 92, pt = (i,r)=>{ const a = (-90 + i*60)*Math.PI/180; return [r*Math.cos(a), r*Math.sin(a)]; };
+  const ring = f => KEYS.map((_,i)=>pt(i,R*f).map(n=>n.toFixed(1)).join(",")).join(" ");
+  const shape = KEYS.map((k,i)=>pt(i, R*Math.max(.04, sc[k]/100)).map(n=>n.toFixed(1)).join(",")).join(" ");
+  let g = [.25,.5,.75,1].map(f=>`<polygon points="${ring(f)}" fill="none" style="stroke:var(--line)" stroke-width="1"/>`).join("");
+  g += KEYS.map((_,i)=>{ const [x,y] = pt(i,R); return `<line x1="0" y1="0" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" style="stroke:var(--line)"/>`; }).join("");
+  g += `<polygon points="${shape}" style="fill:var(--violet);stroke:var(--violet)" fill-opacity=".18" stroke-width="2" stroke-linejoin="round"/>`;
+  g += KEYS.map((k,i)=>{ const [x,y] = pt(i, R*Math.max(.04, sc[k]/100)); return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" style="fill:var(--violet)"/>`; }).join("");
+  g += KEYS.map((k,i)=>{ const [x,y] = pt(i, R+20); return `<text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600" style="fill:var(--ink)">${k}</text>`; }).join("");
+  return `<svg viewBox="-130 -128 260 256" role="img" aria-label="Heksagon minat RIASEC: ${KEYS.map(k=>k+" "+sc[k]+"%").join(", ")}">${g}</svg>`;
+}
+function vAsesmen(){
+  if(UI.taking){
+    const q = QUESTIONS[UI.q], a = UI.tmp[UI.q], last = UI.q === QUESTIONS.length-1;
+    return `<section class="card raised quiz">
+      <div class="card-h" style="margin-bottom:8px"><span class="eyebrow">Pernyataan ${UI.q+1} dari ${QUESTIONS.length}</span><button class="link" data-act="quitTest">Batal</button></div>
+      <div class="bar" role="progressbar" aria-valuenow="${UI.q+1}" aria-valuemin="1" aria-valuemax="${QUESTIONS.length}"><span style="width:${(UI.q+1)/QUESTIONS.length*100}%"></span></div>
+      <p class="quiz-q">${q[1]}</p>
+      <div class="opts" role="radiogroup" aria-label="Seberapa sesuai pernyataan ini denganmu?">
+        ${SCALE.map((s,i)=>`<button class="opt" role="radio" aria-checked="${a===i+1}" data-act="answer" data-v="${i+1}"><span class="radio"></span>${s}</button>`).join("")}
+      </div>
+      <div class="quiz-nav"><button class="btn btn-g" data-act="prevQ" ${UI.q===0?"disabled":""}>Kembali</button>
+        <button class="btn btn-p" data-act="nextQ" ${a?"":"disabled"}>${last?"Lihat hasil":"Lanjut"}</button></div>
+    </section>`;
+  }
+  const sc = scores(S.answers), code = topCode(sc);
+  const top = CAREERS.map(c=>({c, m:match(c,sc)})).sort((a,b)=>b.m-a.m).slice(0,4);
+  return `${S.isExample?`<p class="example-flag" style="align-self:flex-start">Ini contoh hasil. Kerjakan asesmen untuk melihat hasilmu sendiri.</p>`:""}
+  <div class="grid g-2">
+    <section class="card raised">
+      <div class="card-h"><h2>Profil minatmu</h2><button class="btn btn-p btn-s" data-act="startTest">${S.isExample?"Mulai asesmen":"Kerjakan ulang"}</button></div>
+      <div class="hexwrap"><div class="hex">${hexSVG(sc)}</div>
+        <div><p class="eyebrow">Kode Holland</p><p class="big-code">${code}</p>
+          <p style="margin-top:8px"><b>${RIASEC[code[0]].id} + ${RIASEC[code[1]].id}.</b> Kamu ${RIASEC[code[0]].d}, dan juga ${RIASEC[code[1]].d}.</p></div></div>
+      <div class="rows" style="margin-top:20px">${KEYS.map(k=>`<div class="row"><span><b>${RIASEC[k].id}</b> <span class="muted mono">${k}</span></span><div class="bar"><span style="width:${sc[k]}%;${code.includes(k)?"":"background:var(--muted);opacity:.45"}"></span></div><span class="mono" style="text-align:right">${sc[k]}</span></div>`).join("")}</div>
+    </section>
+    <section class="card">
+      <div class="card-h"><h2>Karier paling cocok</h2><button class="link" data-go="direktori">Lihat semua</button></div>
+      <div class="reco">${top.map(({c,m})=>`<div class="reco-item ${S.target===c.id?"is-target":""}"><span class="pct">${m}%</span><div class="grow"><b>${c.name}</b><div class="note">${c.majors.join(" · ")}</div></div>
+        ${S.target===c.id?`<span class="pill info">Target</span>`:`<button class="btn btn-g btn-s" data-act="setTarget" data-id="${c.id}">Jadikan target</button>`}</div>`).join("")}</div>
+      <p class="note" style="margin-top:14px">Kecocokan dihitung dari skor dua huruf kode karier terhadap profil minatmu. Gunakan sebagai bahan diskusi, bukan keputusan akhir.</p>
+    </section></div>`;
+}
+
+function vRoadmap(){
+  const c = career(S.target), sc = scores(S.answers), r = rm(c), st = rmStats(c);
+  let nowIdx = r.phases.findIndex((ph,p)=>ph.tasks.some((_,t)=>!S.checks[tkey(c,r.rev,p,t)])); if(nowIdx<0) nowIdx = r.phases.length;
+  return `<section class="card raised target">
+      <div class="grow"><p class="eyebrow">Target karier</p><h2 style="font-size:1.5rem;margin:4px 0 6px">${c.name}</h2>
+        <p class="note">${codeHTML(c.code)} &nbsp;Cocok ${match(c,sc)}% dengan minatmu · ${c.majors.join(" · ")}</p></div>
+      <div style="min-width:200px;flex:1;max-width:320px"><div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px"><span>Progres</span><b class="num">${st.done}/${st.total} langkah · ${st.pct}%</b></div>
+        <div class="bar"><span style="width:${st.pct}%"></span></div></div>
+      <div class="chips"><button class="btn btn-g btn-s" data-go="direktori">Ganti target</button>
+        <button class="btn btn-p btn-s" data-act="personalize" ${UI.rmBusy?"disabled":""}>${UI.rmBusy?"Naiki sedang menyusun…":"Personalisasi dengan Naiki"}</button></div>
+    </section>
+    ${r.ai?`<p class="note">Roadmap ini disusun ulang oleh Naiki. <button class="link" data-act="resetRm">Kembalikan ke template</button></p>`:""}
+    ${UI.rmBusy?`<p class="note">Biasanya selesai dalam kurang dari satu menit.</p>`:""}
+    <ol class="tl">${r.phases.map((ph,p)=>{ const done = p<nowIdx, now = p===nowIdx;
+      return `<li class="ph ${done?"done":now?"now":""}"><span class="node">${done?"✓":p+1}</span><div class="ph-body">
+        <div class="ph-h"><h3>${esc(ph.title)}</h3><span class="note">${esc(ph.period)}${now?` · <b style="color:var(--violet)">sedang berjalan</b>`:""}</span></div>
+        ${ph.tasks.map((t,ti)=>{ const k = tkey(c,r.rev,p,ti), on = !!S.checks[k];
+          return `<label class="task ${on?"is-done":""}"><input type="checkbox" id="t-${esc(k)}" data-act="check" data-k="${esc(k)}" ${on?"checked":""}><span>${esc(t)}</span></label>`; }).join("")}
+      </div></li>`; }).join("")}</ol>`;
+}
+async function personalize(){
+  if(aiState==="nokey"){ toast(errCopy("no_key")); return; }
+  const c = career(S.target), sc = scores(S.answers);
+  UI.rmBusy = true; render();
+  try{
+    const d = await callNaiki({task:"roadmap", career:c.name, code:topCode(sc), scores:sc, majors:c.majors.join(", ")});
+    if(!Array.isArray(d.phases) || d.phases.length < 3) throw {code:"invalid_json"};
+    S.roadmaps[c.id] = {rev:(S.roadmaps[c.id]?S.roadmaps[c.id].rev:0)+1, ai:true, phases:d.phases}; save();
+    toast("Roadmap dipersonalisasi oleh Naiki");
+  }catch(e){ toast(errCopy(e && e.code)); }
+  finally{ UI.rmBusy = false; if(UI.view==="roadmap") render(); }
+}
+
+function vGuru(){
+  const kelasList = ["Semua", ...new Set(STUDENTS.map(s=>s.k))];
+  const nadiaP = rmStats(career(S.target)).pct;
+  const rows = STUDENTS.filter(s=>UI.kelas==="Semua"||s.k===UI.kelas);
+  const maxS = Math.max(...Object.values(SPREAD));
+  return `<p class="example-flag" style="align-self:flex-start">Data contoh untuk prototype</p>
+  <div class="stats">
+    <div class="stat"><p class="eyebrow">Siswa binaan</p><p class="v">142</p><p class="note">Kelas XI dan XII</p></div>
+    <div class="stat"><p class="eyebrow">Asesmen selesai</p><p class="v">118</p><div class="bar" style="margin:6px 0 4px"><span style="width:83%"></span></div><p class="note">83% dari siswa binaan</p></div>
+    <div class="stat crit"><p class="eyebrow">Perlu perhatian</p><p class="v">9</p><p class="note">3 di antaranya kelas XII</p></div>
+    <div class="stat"><p class="eyebrow">Sesi minggu ini</p><p class="v">12</p><p class="note">8 sesi BK · 4 mentoring</p></div>
+  </div>
+  <div class="grid g-2">
+    <section class="card"><div class="card-h"><h2>Perhatian prioritas</h2><span class="pill crit">3 baru</span></div>
+      <div class="alerts">
+        <div class="alert crit"><p><b>Aditya Pratama</b> (XII IPS 1) belum memilih prodi, padahal pendaftaran SNBP makin dekat.</p><button class="btn btn-g btn-s" data-act="invite" data-n="Aditya Pratama">Jadwalkan</button></div>
+        <div class="alert warn"><p><b>Salsabila Rahma</b> (XI MIPA 3) punya skor minat yang menyebar rata. Perlu sesi eksplorasi.</p><button class="btn btn-g btn-s" data-act="invite" data-n="Salsabila Rahma">Jadwalkan</button></div>
+        <div class="alert info"><p><b>24 siswa</b> belum membuka roadmap mereka dalam 14 hari terakhir.</p><button class="btn btn-g btn-s" data-act="remind">Kirim pengingat</button></div>
+      </div></section>
+    <section class="card"><div class="card-h"><h2>Sebaran minat siswa</h2><span class="note num">118 siswa</span></div>
+      <div class="rows">${KEYS.map(k=>`<div class="row"><span><b>${RIASEC[k].id}</b> <span class="muted mono">${k}</span></span><div class="bar"><span style="width:${SPREAD[k]/maxS*100}%"></span></div><span class="mono" style="text-align:right">${SPREAD[k]}</span></div>`).join("")}</div>
+      <p class="note" style="margin-top:14px">Huruf pertama kode minat tiap siswa. Investigative paling banyak di angkatan ini.</p></section>
+  </div>
+  <section class="card"><div class="card-h"><h2>Daftar siswa</h2><label class="note">Kelas&nbsp; <select id="kelasSel" data-act="kelas">${kelasList.map(k=>`<option ${k===UI.kelas?"selected":""}>${k}</option>`).join("")}</select></label></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Nama</th><th>Kelas</th><th>Minat</th><th>Target karier</th><th>Progres roadmap</th><th>Status</th><th></th></tr></thead>
+    <tbody>${rows.map(s=>{ const p = s.p===null ? nadiaP : s.p;
+      return `<tr><td><b>${s.n}</b></td><td>${s.k}</td><td>${s.code==="–"?`<span class="muted">–</span>`:codeHTML(s.code)}</td><td>${s.t}</td>
+      <td><span class="bar"><span style="width:${p}%"></span></span><span class="mono">${p}%</span></td><td><span class="pill ${s.s[0]}">${s.s[1]}</span></td>
+      <td><button class="btn btn-g btn-s" data-act="invite" data-n="${s.n}">Jadwalkan</button></td></tr>`; }).join("")}</tbody></table></div></section>`;
+}
+
+function vMentoring(){
+  const nx = S.sessions[0], m = nx ? MENTORS.find(x=>x.id===nx.mentor) : null;
+  return `${nx&&m?`<section class="next"><div><p class="eyebrow">Sesi berikutnya</p><p class="when">${nx.slot} WIB</p>
+      <p>Dengan <b>${m.name}</b>, ${m.role}. Topik: ${esc(nx.topic)}.</p></div>
+      <div class="chips"><button class="btn btn-p" data-act="join">Gabung sesi</button></div></section>`:""}
+    <div class="grid g-side">
+      <section class="grid" style="align-content:start">
+        <div class="card-h" style="margin:0"><h2>Pilih mentor</h2><span class="note">Mentor adalah contoh alumni</span></div>
+        <div class="mentors">${MENTORS.map(x=>`<article class="card mentor"><div class="mentor-h"><span class="av">${x.init}</span><div><h3>${x.name}</h3><p class="note">${x.role} · ${x.alum}</p></div></div>
+          <div class="chips">${x.tags.map(t=>`<span class="pill neutral">${t}</span>`).join("")}</div>
+          <div><p class="eyebrow" style="margin-bottom:6px">Slot tersedia</p><div class="slots">${x.slots.map(s=>`<button class="slot" aria-pressed="${UI.pick[x.id]===s}" data-act="pick" data-m="${x.id}" data-s="${s}">${s}</button>`).join("")}</div></div>
+          <button class="btn btn-g btn-s" data-act="book" data-m="${x.id}" ${UI.pick[x.id]?"":"disabled"} style="align-self:flex-start">Ajukan sesi</button></article>`).join("")}</div>
+      </section>
+      <aside class="grid" style="align-content:start">
+        <section class="card"><div class="card-h"><h2>Jadwal kamu</h2></div><ul class="list">
+          ${S.sessions.map(s=>{ const mm = MENTORS.find(x=>x.id===s.mentor); return `<li><span><b>${mm.name}</b><br><span class="note">${s.slot} · ${esc(s.topic)}</span></span><span class="pill ${s.status==="Terjadwal"?"good":"warn"}">${s.status}</span></li>`; }).join("")}
+          <li><span><b>Kak Dimas Arya</b><br><span class="note">Kam 8 Okt · Kenalan dunia UI/UX</span></span><span class="pill neutral">Selesai</span></li>
+          <li><span><b>Ibu Ratna Dewi</b><br><span class="note">Kam 1 Okt · Membahas hasil asesmen</span></span><span class="pill neutral">Selesai</span></li>
+        </ul></section>
+        <section class="card"><div class="card-h"><h2>Catatan sesi</h2><span class="note" id="noteSaved"></span></div>
+          <label for="notesBox" class="sr">Catatan sesi</label><textarea class="notes" id="notesBox">${esc(S.notes)}</textarea>
+          <p class="note" style="margin-top:8px">Tersimpan otomatis di browser ini.</p></section>
+      </aside></div>`;
+}
+function openCall(){
+  const nx = S.sessions[0], m = MENTORS.find(x=>x.id===nx.mentor); let sec = 0;
+  $("#layer").innerHTML = `<div class="call" role="dialog" aria-modal="true" aria-label="Sesi video dengan ${m.name}">
+    <div class="call-h"><div><b>${m.name}</b><br><small>${esc(nx.topic)} · simulasi ruang sesi</small></div><span class="mono" id="callTimer">00:00</span></div>
+    <div class="tiles"><div class="tile"><span class="av grad">${m.init}</span><span>${m.name}</span></div><div class="tile"><span class="av">NP</span><span>Kamu</span></div></div>
+    <div class="call-ctl">
+      <button class="cbtn" aria-pressed="false" data-act="toggle" aria-label="Matikan mikrofon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <button class="cbtn" aria-pressed="false" data-act="toggle" aria-label="Matikan kamera"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg></button>
+      <button class="cbtn end" data-act="endCall" aria-label="Akhiri sesi"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 9c-3.2 0-6.2.9-8.7 2.6-.6.4-.8 1.2-.4 1.8l1.4 2c.4.5 1.1.7 1.7.4l2.3-1.1c.5-.2.8-.7.8-1.2V12c1-.3 1.9-.4 2.9-.4s1.9.1 2.9.4v1.5c0 .5.3 1 .8 1.2l2.3 1.1c.6.3 1.3.1 1.7-.4l1.4-2c.4-.6.2-1.4-.4-1.8C18.2 9.9 15.2 9 12 9z"/></svg></button>
+    </div></div>`;
+  clearInterval(openCall._t);
+  openCall._t = setInterval(()=>{ sec++; const t = $("#callTimer"); if(!t){ clearInterval(openCall._t); return; } t.textContent = String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0"); },1000);
+  $(".call .end").focus();
+}
+
+const BADGE_IC = {
+  diri:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
+  langkah:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
+  jelajah:'<path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>',
+  mentee:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.5c3 0 5 1.8 5 4.5"/>',
+  separuh:'<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/>',
+  streak:'<path d="M12 21c4 0 7-2.7 7-6.5 0-4-3.5-6-4.5-10-2 1.5-3 3.5-3 5.5-1.2-.8-2-2-2.3-3.5C7.4 8.4 5 11 5 14.5 5 18.3 8 21 12 21z"/>'
+};
+function vProgress(){
+  const x = xpInfo(), c = career(S.target), r = rm(c);
+  const C = 2*Math.PI*56, off = C*(1 - x.into/300);
+  const badges = [
+    ["diri","Kenali Diri","Selesaikan asesmen", S.assessed && !S.isExample, S.isExample?"Asesmen belum dikerjakan":"Terbuka"],
+    ["langkah","Langkah Pertama","Centang 1 tugas roadmap", x.st.done>=1, x.st.done>=1?"Terbuka":"0 dari 1"],
+    ["jelajah","Penjelajah","Buka 5 profesi di direktori", S.viewed.length>=5, Math.min(S.viewed.length,5)+" dari 5"],
+    ["mentee","Mentee Aktif","Ikut 1 sesi mentoring", S.doneSessions>=1, "Terbuka"],
+    ["separuh","Separuh Jalan","Roadmap 50%", x.st.pct>=50, x.st.pct+"% dari 50%"],
+    ["streak","Konsisten","Aktif 7 hari beruntun", S.streak>=7, S.streak+" dari 7 hari"]
+  ];
+  const W=560,H=190,L=34,B=26,T=12, maxV=60, bw=(W-L-10)/7;
+  let ch = [0,20,40,60].map(v=>{ const y = T+(H-T-B)*(1-v/maxV); return `<line x1="${L}" x2="${W-6}" y1="${y}" y2="${y}" style="stroke:var(--line)"/><text x="${L-8}" y="${y+4}" text-anchor="end" font-size="11" style="fill:var(--muted)" font-family="IBM Plex Mono, monospace">${v}</text>`; }).join("");
+  ch += WEEK.map(([d,v],i)=>{ const h = (H-T-B)*(v/maxV), x0 = L+i*bw+bw*.22, y = H-B-h, today = i===WEEK.length-1;
+    return `<rect x="${x0.toFixed(1)}" y="${y.toFixed(1)}" width="${(bw*.56).toFixed(1)}" height="${Math.max(h,1.5).toFixed(1)}" rx="5" style="fill:${today?"var(--blue)":"var(--violet)"}" fill-opacity="${today?1:.55}"/>
+    ${today?`<text x="${(x0+bw*.28).toFixed(1)}" y="${(y-6).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="600" style="fill:var(--ink)" font-family="IBM Plex Mono, monospace">${v}</text>`:""}
+    <text x="${(x0+bw*.28).toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="11" style="fill:${today?"var(--ink)":"var(--muted)"}" font-weight="${today?600:400}">${d}</text>`; }).join("");
+  let nowIdx = r.phases.findIndex((ph,p)=>ph.tasks.some((_,t)=>!S.checks[tkey(c,r.rev,p,t)])); if(nowIdx<0) nowIdx = r.phases.length;
+  return `<div class="grid g-2">
+    <section class="card raised"><div class="card-h"><h2>Level kamu</h2><span class="pill info">${x.xp} XP</span></div>
+      <div class="lvl"><div class="ring"><svg viewBox="0 0 132 132" aria-hidden="true"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6A35C8"/><stop offset="1" stop-color="#2950B8"/></linearGradient></defs>
+        <circle cx="66" cy="66" r="56" fill="none" style="stroke:var(--sunk)" stroke-width="12"/><circle cx="66" cy="66" r="56" fill="none" stroke="url(#rg)" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/></svg>
+        <div class="in"><div><small class="muted">Level</small><b>${x.level}</b></div></div></div>
+        <div class="minis"><div class="mini"><b>${S.streak} hari</b><small>Aktif beruntun</small></div><div class="mini"><b>${x.st.done}/${x.st.total}</b><small>Tugas roadmap</small></div>
+          <div class="mini"><b>${S.doneSessions}</b><small>Sesi mentoring selesai</small></div><div class="mini"><b>${S.viewed.length}</b><small>Profesi dijelajahi</small></div></div></div>
+      <p class="note" style="margin-top:14px">${300-x.into} XP lagi menuju level ${x.level+1}. Tugas roadmap memberi 40 XP, sesi mentoring 60 XP.</p></section>
+    <section class="card chart"><div class="card-h"><h2>Aktivitas minggu ini</h2><span class="example-flag">Contoh data</span></div>
+      <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Menit belajar per hari: ${WEEK.map(w=>w[0]+" "+w[1]).join(", ")}">${ch}</svg>
+      <p class="note">Menit di Naiki per hari. Total ${WEEK.reduce((a,w)=>a+w[1],0)} menit.</p></section>
+  </div>
+  <div class="grid g-2">
+    <section class="card"><div class="card-h"><h2>Lencana</h2><span class="note">${badges.filter(b=>b[3]).length} dari ${badges.length} terbuka</span></div>
+      <div class="badges">${badges.map(b=>`<div class="badge ${b[3]?"":"locked"}"><span class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${BADGE_IC[b[0]]}</svg></span><b>${b[1]}</b><small>${b[3]?b[2]:b[4]}</small></div>`).join("")}</div></section>
+    <section class="card"><div class="card-h"><h2>Tonggak roadmap</h2><button class="link" data-go="roadmap">Buka roadmap</button></div>
+      <ul class="list">${r.phases.map((ph,p)=>`<li><span><b>${esc(ph.title)}</b><br><span class="note">${esc(ph.period)}</span></span><span class="pill ${p<nowIdx?"good":p===nowIdx?"info":"neutral"}">${p<nowIdx?"Selesai":p===nowIdx?"Berjalan":"Nanti"}</span></li>`).join("")}</ul>
+      <p class="note" style="margin-top:10px">Target: ${c.name}</p></section>
+  </div>`;
+}
+
+function vDirektori(){
+  const sc = scores(S.answers), q = UI.search.trim().toLowerCase();
+  let list = CAREERS.map(c=>({c, m:match(c,sc)})).filter(({c})=>(UI.field==="Semua"||c.field===UI.field) &&
+    (!q || (c.name+" "+c.majors.join(" ")+" "+c.field).toLowerCase().includes(q)));
+  if(UI.sort==="cocok") list.sort((a,b)=>b.m-a.m); else if(UI.sort==="az") list.sort((a,b)=>a.c.name.localeCompare(b.c.name,"id"));
+  else list.sort((a,b)=>(a.c.outlook==="Tinggi"?0:1)-(b.c.outlook==="Tinggi"?0:1) || b.m-a.m);
+  return `<div class="toolbar">
+      <div class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+        <label for="dirSearch" class="sr">Cari profesi atau jurusan</label><input id="dirSearch" type="search" placeholder="Cari profesi atau jurusan, misal: gizi" value="${esc(UI.search)}"></div>
+      <label class="note">Urutkan&nbsp; <select id="dirSort"><option value="cocok" ${UI.sort==="cocok"?"selected":""}>Paling cocok</option><option value="prospek" ${UI.sort==="prospek"?"selected":""}>Prospek tinggi</option><option value="az" ${UI.sort==="az"?"selected":""}>A–Z</option></select></label>
+    </div>
+    <div class="chips" role="group" aria-label="Bidang">${FIELDS.map(f=>`<button class="chip" aria-pressed="${UI.field===f}" data-act="field" data-f="${f}">${f}</button>`).join("")}</div>
+    <p class="note" id="dirCount">${list.length} profesi · kode minatmu ${topCode(sc)}</p>
+    <div class="cards">${list.map(({c,m})=>`<button class="ccard ${S.target===c.id?"is-target":""}" data-act="detail" data-id="${c.id}">
+        <div class="h"><div><h3>${c.name}</h3><p class="meta">${c.field}</p></div>${codeHTML(c.code)}</div>
+        <div><div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:5px"><span class="muted">Kecocokan</span><b class="mono" style="color:var(--violet)">${m}%</b></div><div class="bar"><span style="width:${m}%"></span></div></div>
+        <p class="meta">${c.majors.join(" · ")}</p>
+        <div class="foot"><span class="mono">${c.salary==="bervariasi"?"Penghasilan bervariasi":"Rp "+c.salary+" jt/bln*"}</span><span class="pill ${c.outlook==="Tinggi"?"good":"neutral"}">Prospek ${c.outlook.toLowerCase()}</span></div>
+      </button>`).join("") || `<p class="muted">Tidak ada profesi yang cocok dengan pencarian itu. Coba kata lain atau pilih bidang "Semua".</p>`}</div>
+    <p class="note">* Kisaran gaji awal adalah perkiraan ilustratif untuk prototype, bukan data resmi. Kecocokan dihitung dari hasil asesmen.</p>`;
+}
+function openDetail(id){
+  const c = career(id), sc = scores(S.answers);
+  if(!S.viewed.includes(id)){ S.viewed.push(id); save(); }
+  $("#layer").innerHTML = `<div class="drawer-bg" data-act="closeLayer"></div>
+    <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div><p class="eyebrow">${c.field}</p><h2 id="dTitle" style="font-size:1.6rem;margin-top:4px">${c.name}</h2></div>
+        <button class="btn btn-g btn-s" data-act="closeLayer" id="dClose">Tutup</button></div>
+      <p>${c.desc}</p>
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">${codeHTML(c.code)}<span class="note">${RIASEC[c.code[0]].id} + ${RIASEC[c.code[1]].id}</span><span class="pct">${match(c,sc)}% cocok</span></div>
+      <dl><div><dt>Jurusan kuliah</dt><dd>${c.majors.join(", ")}</dd></div>
+        <div><dt>Contoh PTN</dt><dd>${c.ptn.join(", ")}</dd></div>
+        <div><dt>Mulai dari SMA</dt><dd>Pelajari ${c.skill}, lalu coba ${c.proyek}.</dd></div>
+        <div><dt>Posisi awal</dt><dd>${c.entry}</dd></div>
+        <div><dt>Perkiraan gaji awal*</dt><dd class="mono">${c.salary==="bervariasi"?"Bervariasi":"Rp "+c.salary+" juta per bulan"}</dd></div>
+        <div><dt>Prospek</dt><dd><span class="pill ${c.outlook==="Tinggi"?"good":"neutral"}">${c.outlook}</span></dd></div></dl>
+      <div class="chips">${S.target===c.id?`<span class="pill info">Sudah jadi target roadmap</span>`:`<button class="btn btn-p" data-act="setTarget" data-id="${c.id}" data-then="roadmap">Jadikan target roadmap</button>`}
+        <button class="btn btn-g" data-act="askAbout" data-id="${c.id}">Tanya Naiki</button></div>
+      <p class="note">* Perkiraan ilustratif untuk prototype.</p>
+    </aside>`;
+  $("#dClose").focus();
+}
+function closeLayer(){ $("#layer").innerHTML = ""; clearInterval(openCall._t); }
+
+/* ---------- render ---------- */
+function render(){
+  const v = VIEWS.find(x=>x.id===UI.view);
+  $("#nav").innerHTML = VIEWS.map((x,i)=>`<li><a href="#${x.id}" data-go="${x.id}" ${x.id===UI.view?'aria-current="page"':""}><span class="n">${i+1}</span><span class="t"><span>${x.label}</span><small>${x.cap}</small></span></a></li>`).join("");
+  const body = {companion:vCompanion, asesmen:vAsesmen, roadmap:vRoadmap, guru:vGuru, mentoring:vMentoring, progress:vProgress, direktori:vDirektori}[v.id]();
+  $("#view").innerHTML = header(v) + body;
+  if(v.id==="companion"){ paintMsgs(); paintComposer(); }
+  const cur = document.querySelector('.nav a[aria-current="page"]'); if(cur && window.innerWidth<=860) cur.scrollIntoView({block:"nearest",inline:"center"});
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click", e=>{
+  const g = e.target.closest("[data-go]"); if(g){ e.preventDefault(); closeLayer(); go(g.dataset.go); return; }
+  const a = e.target.closest("[data-act]"); if(!a) return; const act = a.dataset.act;
+  if(act==="suggest"){ sendChat(a.dataset.q); }
+  else if(act==="stop"){ e.preventDefault(); if(UI.ctl) UI.ctl.abort(); }
+  else if(act==="clearChat"){ if(UI.busy && UI.ctl) UI.ctl.abort(); S.chat = []; S.chatIsExample = false; save(); paintMsgs(); }
+  else if(act==="startTest"){ UI.taking = true; UI.q = 0; UI.tmp = []; render(); }
+  else if(act==="quitTest"){ UI.taking = false; render(); }
+  else if(act==="answer"){ UI.tmp[UI.q] = +a.dataset.v; render();
+    if(UI.q < QUESTIONS.length-1){ clearTimeout(UI._adv); UI._adv = setTimeout(()=>{ if(UI.taking && UI.tmp[UI.q]){ UI.q++; render(); } },280); } }
+  else if(act==="prevQ"){ clearTimeout(UI._adv); UI.q = Math.max(0,UI.q-1); render(); }
+  else if(act==="nextQ"){ clearTimeout(UI._adv);
+    if(UI.q < QUESTIONS.length-1){ UI.q++; render(); }
+    else { S.answers = UI.tmp.slice(); S.assessed = true; S.isExample = false; UI.taking = false; save(); render(); window.scrollTo(0,0); toast("Asesmen selesai. +150 XP"); } }
+  else if(act==="setTarget"){ S.target = a.dataset.id; save(); toast("Target roadmap: " + career(a.dataset.id).name); if(a.dataset.then){ closeLayer(); go(a.dataset.then); } else render(); }
+  else if(act==="check"){ /* handled on change */ }
+  else if(act==="personalize"){ personalize(); }
+  else if(act==="resetRm"){ delete S.roadmaps[S.target]; save(); render(); }
+  else if(act==="invite"){ toast("Undangan sesi BK dibuat untuk " + a.dataset.n + " (simulasi)"); }
+  else if(act==="remind"){ toast("Pengingat dijadwalkan untuk 24 siswa (simulasi)"); }
+  else if(act==="pick"){ UI.pick[a.dataset.m] = UI.pick[a.dataset.m]===a.dataset.s ? null : a.dataset.s; render(); }
+  else if(act==="book"){ const m = MENTORS.find(x=>x.id===a.dataset.m), s = UI.pick[m.id]; if(!s) return;
+    S.sessions.push({mentor:m.id, slot:s, topic:"Konsultasi karier", status:"Menunggu konfirmasi"}); UI.pick[m.id] = null; save(); render(); toast("Sesi diajukan ke " + m.name + " (simulasi)"); }
+  else if(act==="join"){ openCall(); }
+  else if(act==="toggle"){ a.setAttribute("aria-pressed", a.getAttribute("aria-pressed")==="true" ? "false" : "true"); }
+  else if(act==="endCall"){ closeLayer(); toast("Sesi diakhiri. Jangan lupa isi catatan sesi."); }
+  else if(act==="field"){ UI.field = a.dataset.f; render(); }
+  else if(act==="detail"){ openDetail(a.dataset.id); }
+  else if(act==="closeLayer"){ closeLayer(); }
+  else if(act==="askAbout"){ const c = career(a.dataset.id); closeLayer(); UI.draft = `Ceritakan tentang profesi ${c.name}. Apa yang perlu aku siapkan dari sekarang?`; go("companion"); const t = $("#chatInput"); if(t){ t.focus(); } }
+});
+document.addEventListener("change", e=>{
+  const t = e.target;
+  if(t.dataset && t.dataset.act==="check"){ if(t.checked) S.checks[t.dataset.k] = 1; else delete S.checks[t.dataset.k]; save(); if(t.checked) toast("Langkah selesai. +40 XP"); render(); }
+  else if(t.id==="kelasSel"){ UI.kelas = t.value; render(); }
+  else if(t.id==="dirSort"){ UI.sort = t.value; render(); }
+});
+document.addEventListener("input", e=>{
+  const t = e.target;
+  if(t.id==="dirSearch"){ UI.search = t.value; const pos = t.selectionStart; render(); const n = $("#dirSearch"); n.focus(); try{ n.setSelectionRange(pos,pos); }catch(_){} }
+  else if(t.id==="notesBox"){ S.notes = t.value; clearTimeout(UI._n); UI._n = setTimeout(()=>{ save(); const s = $("#noteSaved"); if(s) s.textContent = "Tersimpan"; },500); }
+  else if(t.id==="chatInput"){ UI.draft = t.value; t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight,140)+"px"; }
+});
+document.addEventListener("submit", e=>{ if(e.target.id==="chatForm"){ e.preventDefault(); sendChat($("#chatInput").value); } });
+document.addEventListener("keydown", e=>{
+  if(e.target.id==="chatInput" && e.key==="Enter" && !e.shiftKey){ e.preventDefault(); sendChat(e.target.value); }
+  if(e.key==="Escape" && $("#layer").innerHTML){ closeLayer(); }
+});
+
+window.addEventListener("hashchange", ()=>{ const h = location.hash.slice(1); if(h!==UI.view && VIEWS.some(x=>x.id===h)) go(h); });
+const h0 = (location.hash||"").slice(1); if(VIEWS.some(x=>x.id===h0)) UI.view = h0;
+render();
+</script>
+
+</body>
+</html>

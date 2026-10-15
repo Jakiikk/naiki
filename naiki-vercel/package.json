@@ -1,0 +1,7 @@
+{
+  "name": "naiki-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Naiki AI: teman karier siswa SMA (frontend statis + Vercel Function untuk AI)",
+  "type": "module"
+}
